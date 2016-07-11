@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}" />
+    <meta charset="UTF-8" />
+    <title>VK API</title>
+</head>
+<body>
+<div>
+    <span th:if="${response} != null" th:text="'Response: '+${response}" />
+</div>
+
+<h2>Press it</h2>
+<input type="submit" value="Yes, press me ^^," onclick="return location.href = 'login'"/>
+</body>
+</html>

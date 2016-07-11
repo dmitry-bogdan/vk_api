@@ -1,0 +1,29 @@
+*.class
+
+# NetBeans
+nbactions.xml
+nb-configuration.xml
+
+# eclipse 
+**/target 
+**/target/*
+.classpath
+.project
+.settings
+.settings/*
+
+# IntelliJ Idea
+*.idea
+*.iml
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+#maven
+.mvn/*
+mvn*
