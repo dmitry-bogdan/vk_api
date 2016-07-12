@@ -1,8 +1,10 @@
 package com.example.controller;
 
 import com.example.model.entity.VkGroup;
+import com.example.service.PersistenceService;
 import com.example.service.URI_Builder;
-import com.example.service.VkApiMethodInvoker;
+import com.example.service.exception.VkDataException;
+import com.example.service.exception.VkHttpResponseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -13,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import java.io.IOException;
 
 /**
  * Description:
@@ -25,7 +28,7 @@ import javax.validation.Valid;
 public class GeneralController {
 
     private URI_Builder uriBuilder;
-    private VkApiMethodInvoker apiInvoker;
+    private PersistenceService persistenceService;
 
     @RequestMapping(value = { "/", "/index" })
     public ModelAndView getIndex(@RequestParam(value = "response", required = false) String response,
@@ -44,7 +47,7 @@ public class GeneralController {
     public ModelAndView getAccessTokenPage(@RequestParam("code") String code, HttpSession session) {
         ModelAndView mav = new ModelAndView();
         try {
-            apiInvoker.getAccessToken(session.getId(), code);
+            persistenceService.addAccessToken(code, session.getId());
             mav.setViewName("redirect:/group_input");
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -71,7 +74,7 @@ public class GeneralController {
             mav.setViewName("redirect:/group_input?response=Error&validation_errors=true");
         } else {
             try {
-                apiInvoker.getVkGroup(group);
+                persistenceService.addVkGroup(group);
             } catch (Exception exception) {
                 exception.printStackTrace();
                 mav.setViewName("redirect:/group_input?response=" + exception.getMessage());
@@ -82,13 +85,32 @@ public class GeneralController {
         return mav;
     }
 
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public ModelAndView test() throws IOException, VkHttpResponseException, VkDataException {
+        persistenceService.addNewPosts(124948366);
+        return new ModelAndView("test");
+    }
+
+    @RequestMapping(value = "/group_list", method = RequestMethod.GET)
+    public ModelAndView getGroupList(HttpSession session){
+        ModelAndView mav = new ModelAndView();
+        String viewName = "/group_list";
+        try {
+            mav.addAllObjects(persistenceService.getGroupList(session.getId()));
+        } catch (Exception exception) {
+            viewName = String.format("redirect:/index?response=%s", exception.getMessage());
+            exception.printStackTrace();
+        }
+        mav.setViewName(viewName);
+        return mav;
+    }
     @Autowired
     public void setURI_Builder(URI_Builder uriBuilder) {
         this.uriBuilder = uriBuilder;
     }
 
     @Autowired
-    public void setVkApiMethodInvoker(VkApiMethodInvoker apiInvoker) {
-        this.apiInvoker = apiInvoker;
+    public void setPersistenceService(PersistenceService persistenceService){
+        this.persistenceService = persistenceService;
     }
 }

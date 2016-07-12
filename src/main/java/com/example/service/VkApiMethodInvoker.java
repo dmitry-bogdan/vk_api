@@ -2,12 +2,10 @@ package com.example.service;
 
 import com.example.model.entity.VkAccessToken;
 import com.example.model.entity.VkGroup;
-import com.example.model.repository.VkAccessTokenRepository;
-import com.example.model.repository.VkGroupRepository;
-import com.example.service.exception.VkDataException;
+import com.example.model.entity.VkPost;
 import com.example.service.exception.VkHttpResponseException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -25,6 +23,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Description:
@@ -51,8 +51,6 @@ public class VkApiMethodInvoker {
     private ObjectMapper mapper = new ObjectMapper();
 
     private URI_Builder uriBuilder;
-    private VkAccessTokenRepository accessTokenRepository;
-    private VkGroupRepository groupRepository;
 
     /*
     Proxy config
@@ -77,10 +75,12 @@ public class VkApiMethodInvoker {
             requestConfig = RequestConfig.custom()
                     .build();
         }
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper
+                .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    public void getAccessToken(String sessionId, String code) throws VkHttpResponseException, IOException {
+    public VkAccessToken getAccessToken(String code) throws VkHttpResponseException, IOException {
 
         HttpGet httpGet = new HttpGet(uriBuilder.getVkAccessTokenPage(code));
         httpGet.setConfig(requestConfig);
@@ -90,59 +90,76 @@ public class VkApiMethodInvoker {
         httpResponse = httpClient.execute(httpGet);
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
             token = mapper.readValue(httpResponse.getEntity().getContent(), VkAccessToken.class);
-            token.setSessionId(sessionId);
-            accessTokenRepository.save(token);
         } else {
             System.err.println(httpResponse.getStatusLine().toString());
             throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
         }
+        return token;
     }
 
-    public void getVkGroup(VkGroup inputGroup) throws VkHttpResponseException, VkDataException, IOException {
-        HttpGet httpGet = new HttpGet(uriBuilder.getVkGroup(getGroupScreenName(inputGroup.getGroupURI())));
+    public VkGroup getVkGroup(String groupName) throws VkHttpResponseException, IOException {
+        HttpGet httpGet = new HttpGet(uriBuilder.getVkGroup(groupName));
         httpGet.setConfig(requestConfig);
         HttpResponse httpResponse = null;
         httpResponse = httpClient.execute(httpGet);
+        VkGroup group = null;
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
-            VkResponse<VkGroup> response = mapper.readValue(httpResponse.getEntity().getContent(),
-                    new TypeReference<VkResponse<VkGroup>>(){});
-            if (response.getArray() != null && response.getArray().length > 0) {
-                VkGroup group = response.getArray()[0];
-                group.setGroupName(inputGroup.getGroupName());
-                group.setGroupURI(inputGroup.getGroupURI());
-                System.out.println(groupRepository.save(group));
+            JsonNode root = mapper.readTree(httpResponse.getEntity().getContent());
+            JsonNode response = root.path("response");
+            if (response.isArray()) {
+                group = mapper.treeToValue(response.get(0), VkGroup.class);
             }
-            else throw new VkDataException(String.format("Error. No matching group was found. URI=%s",
-                        inputGroup.getGroupURI()));
         } else {
             System.err.println(httpResponse.getStatusLine().toString());
             throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
         }
+        return group;
     }
 
-    
-    private String getGroupScreenName(String uri) {
-        String uriParts[] = uri.split("/");
-        if (uriParts.length > 1) {
-            return uriParts[uriParts.length - 1];
+    public List<VkPost> getVkPost(Integer groupId, Integer count, Integer offset)
+            throws IOException, VkHttpResponseException {
+        HttpGet httpGet = new HttpGet(uriBuilder.getVkPost(groupId.toString(), count.toString(), offset.toString()));
+        httpGet.setConfig(requestConfig);
+        HttpResponse httpResponse = null;
+        httpResponse = httpClient.execute(httpGet);
+        List<VkPost> postList = new ArrayList<VkPost>();
+        if (httpResponse.getStatusLine().getStatusCode() == 200) {
+            JsonNode root = mapper.readTree(httpResponse.getEntity().getContent());
+            JsonNode response = root.path("response");
+            JsonNode items = response.path("items");
+            if (items.isArray()) {
+                for (JsonNode node : items) {
+                    // Игнор прикрепленных
+                    if (node.path("is_pinned").asInt() != 1)
+                        postList.add(mapper.treeToValue(node, VkPost.class));
+                }
+            }
+        } else {
+            System.err.println(httpResponse.getStatusLine().toString());
+            throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
         }
-        return null;
-
+        return postList;
     }
 
+    public Boolean getGroupIsMember(Integer groupId, String accessToken) throws IOException, VkHttpResponseException {
+        HttpGet httpGet = new HttpGet(uriBuilder.getIsMemberURI(groupId.toString(), accessToken));
+        httpGet.setConfig(requestConfig);
+        HttpResponse httpResponse = null;
+        httpResponse = httpClient.execute(httpGet);
+        Boolean isMember = null;
+        if (httpResponse.getStatusLine().getStatusCode() == 200) {
+            JsonNode root = mapper.readTree(httpResponse.getEntity().getContent());
+            JsonNode response = root.path("response");
+            isMember =  response.asInt() == 1;
+        } else {
+            System.err.println(httpResponse.getStatusLine().toString());
+            throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
+        }
+        return isMember;
+    }
     @Autowired
     public void setURI_Builder(URI_Builder uriBuilder) {
         this.uriBuilder = uriBuilder;
-    }
-
-    @Autowired
-    public void setAccessTokenRepository(VkAccessTokenRepository accessTokenRepository) {
-        this.accessTokenRepository = accessTokenRepository;
-    }
-
-    @Autowired
-    public void setGroupRepository(VkGroupRepository groupRepository) {
-        this.groupRepository = groupRepository;
     }
 
 }

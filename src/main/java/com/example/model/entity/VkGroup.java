@@ -20,13 +20,15 @@ public class VkGroup implements Serializable {
     private Integer groupId;
     private String groupName;
     private String groupURI;
-    private Integer isGroupClosed;
+    private Integer groupClosed;
+    private Integer lastPostId;
 
     @Id
     @Column(name = "group_id", nullable = false, unique = true)
     public Integer getGroupId() {
         return groupId;
     }
+
     @JsonProperty("id")
     public void setGroupId(Integer groupId) {
         this.groupId = groupId;
@@ -39,6 +41,7 @@ public class VkGroup implements Serializable {
     public String getGroupName() {
         return groupName;
     }
+
     public void setGroupName(String groupName) {
         this.groupName = groupName;
     }
@@ -49,6 +52,7 @@ public class VkGroup implements Serializable {
     public String getGroupURI() {
         return groupURI;
     }
+
     public void setGroupURI(String groupURI) {
         this.groupURI = groupURI;
     }
@@ -56,16 +60,27 @@ public class VkGroup implements Serializable {
     @Basic
     @Column(name = "group_opened", nullable = false, unique = false)
     public Integer getGroupClosed() {
-        return isGroupClosed;
+        return groupClosed;
     }
+
     @JsonProperty("is_closed")
     public void setGroupClosed(Integer groupClosed) {
-        isGroupClosed = groupClosed;
+        this.groupClosed = groupClosed;
     }
 
     @Override
-    public String toString(){
-        return String.format("VkGroup(groupId=%d groupName=%s groupURI=%s)",
-                groupId, groupName, groupURI);
+    public String toString() {
+        return String.format("VkGroup(groupId=%d groupName=%s groupURI=%s isClosed=%d lastPostId=%d)",
+                groupId, groupName, groupURI, groupClosed, lastPostId);
+    }
+
+    @Basic
+    @Column(name = "last_post_id", nullable = true, unique = false)
+    public Integer getLastPostId() {
+        return lastPostId;
+    }
+
+    public void setLastPostId(Integer lastPostId) {
+        this.lastPostId = lastPostId;
     }
 }

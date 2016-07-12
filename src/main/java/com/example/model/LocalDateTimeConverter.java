@@ -1,4 +1,4 @@
-package com.example.service;
+package com.example.model;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

@@ -1,6 +1,6 @@
 package com.example.model.entity;
 
-import com.example.service.LocalDateTimeConverter;
+import com.example.model.LocalDateTimeConverter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/main.css}"/>
+    <title>Group list</title>
+</head>
+<body>
+<table>
+    <thead>
+    <tr>
+        <td>
+            Group Name
+        </td>
+        <td>
+            Link
+        </td>
+        <td>
+            Closed Group
+        </td>
+        <td>
+            User signed in
+        </td>
+        <td>
+            New posts
+        </td>
+
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="group : ${groupList}">
+        <td th:text="*{group.groupName}"/>
+        <td>
+            <a th:href="*{group.groupURI}" th:text="*{group.groupURI}"/>
+        </td>
+        <td th:text="*{group.groupClosed > 0}"/>
+        <td th:text="${signedMap[group.groupId]}"/>
+        <td th:text="${newPostsList[group.groupId].size()}" />
+        <td>
+            <ul th:if="${newPostsList[group.groupId] != null}">
+                <li th:each="post : ${newPostsList[group.groupId]}" th:text="*{post.postId}"></li>
+            </ul>
+        </td>
+    </tr>
+    <tr th:if="${groupList.size() == 0}"><td>There is no data</td></tr>
+    </tbody>
+</table>
+</body>
+</html>

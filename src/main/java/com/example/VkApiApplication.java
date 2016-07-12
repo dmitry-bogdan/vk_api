@@ -9,6 +9,7 @@ import org.springframework.context.annotation.PropertySource;
 @EnableAutoConfiguration
 @PropertySource(value = "vk.properties")
 @PropertySource(value = "network.properties")
+@PropertySource(value = "log4j.properties")
 public class VkApiApplication {
 
 	public static void main(String[] args) {

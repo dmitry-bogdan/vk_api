@@ -12,4 +12,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface VkAccessTokenRepository extends JpaRepository<VkAccessToken, String>{
+
+    VkAccessToken findOneBySessionId(String sessionId);
 }
