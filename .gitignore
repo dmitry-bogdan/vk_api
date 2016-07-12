@@ -24,6 +24,8 @@ nb-configuration.xml
 *.war
 *.ear
 
+#log
+log/*
 #maven
 .mvn/*
 mvn*
