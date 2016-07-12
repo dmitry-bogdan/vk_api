@@ -1,6 +1,57 @@
+
+html, body, h2, div ,table, ul, li, tr, td{
+	padding: 0;
+	margin: 0;
+}
+htm{
+	height:100%;
+	background-color: #edeef0;
+}
 body{
     width:900px;
-    margin: 0 auto;
-    padding: 25px;
-    background-color: azure;
+    margin: auto; 
+	background: #507299;
+	height: 100%;
+}
+ul{
+	list-style: none;
+}
+div.center li{
+	margin: 15px;
+}
+div.center td{
+	padding: 3px;
+}
+div.center {
+	margin-top: 25px;
+	text-align: center;
+}
+div.center h2{
+	margin-bottom: 15px;
+}
+
+div.error, div.error ul, div.error li{
+	font-family: sans-serif;
+	font-size: large;
+	color: #7d2222;
+	width: 350px;
+	margin: 0 auto;
+}
+.group_list{
+	width: 100%;
+	border-spacing: 0;
+	border-width: 1px;
+	border-style: solid;
+	border-color: black;
+	margin-top: 25px;
+}
+.group_list td{
+	border: 1px solid black;
+	
+}
+ul.posts li{
+	margin: 0;
+}
+a{
+	color:#def;
 }

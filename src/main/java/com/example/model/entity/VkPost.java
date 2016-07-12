@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.persistence.*;
 
 /**
- * Description:
+ * Description: Пост
  * Creation date: 12.07.2016 10:58
  *
  * @author sks
@@ -41,6 +41,10 @@ public class VkPost {
         this.groupId = groupId;
     }
 
+    @Transient
+    public String getUri(){
+        return String.format("https://vk.com/wall-%d_%d", groupId, postId);
+    }
     @Override
     public String toString() {
         return String.format("VkPost(postId=%d groupId=%d)", postId, groupId);

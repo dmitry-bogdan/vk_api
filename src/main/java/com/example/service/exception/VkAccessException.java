@@ -1,7 +1,7 @@
 package com.example.service.exception;
 
 /**
- * Description:
+ * Description: Ошибка доступа к API
  * Creation date: 12.07.2016 10:28
  *
  * @author sks

@@ -1,7 +1,7 @@
 package com.example.service.exception;
 
 /**
- * Description:
+ * Description: ошибка полученных данных
  * Creation date: 11.07.2016 18:19
  *
  * @author sks

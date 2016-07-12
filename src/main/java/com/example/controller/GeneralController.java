@@ -5,6 +5,8 @@ import com.example.service.PersistenceService;
 import com.example.service.URI_Builder;
 import com.example.service.exception.VkDataException;
 import com.example.service.exception.VkHttpResponseException;
+
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -18,7 +20,7 @@ import javax.validation.Valid;
 import java.io.IOException;
 
 /**
- * Description:
+ * Description: контроллер
  * Creation date: 11.07.2016 8:20
  *
  * @author sks
@@ -27,6 +29,8 @@ import java.io.IOException;
 @Controller
 public class GeneralController {
 
+    Logger LOG = Logger.getLogger(this.getClass());
+    
     private URI_Builder uriBuilder;
     private PersistenceService persistenceService;
 
@@ -50,7 +54,7 @@ public class GeneralController {
             persistenceService.addAccessToken(code, session.getId());
             mav.setViewName("redirect:/group_input");
         } catch (Exception exception) {
-            exception.printStackTrace();
+            LOG.error(exception.getStackTrace().toString());
             mav.setViewName("redirect:/index?response=" + exception.getMessage());
         }
         return mav;
@@ -76,7 +80,7 @@ public class GeneralController {
             try {
                 persistenceService.addVkGroup(group);
             } catch (Exception exception) {
-                exception.printStackTrace();
+                LOG.error(exception.getStackTrace().toString());
                 mav.setViewName("redirect:/group_input?response=" + exception.getMessage());
                 return mav;
             }
@@ -99,7 +103,7 @@ public class GeneralController {
             mav.addAllObjects(persistenceService.getGroupList(session.getId()));
         } catch (Exception exception) {
             viewName = String.format("redirect:/index?response=%s", exception.getMessage());
-            exception.printStackTrace();
+            LOG.error(exception.getStackTrace().toString());
         }
         mav.setViewName(viewName);
         return mav;

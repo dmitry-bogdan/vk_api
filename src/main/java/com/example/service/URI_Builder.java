@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Description:
+ * Description: Построитель URI для вызова API
  * Creation date: 11.07.2016 8:40
  *
  * @author sks

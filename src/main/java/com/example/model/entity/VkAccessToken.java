@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * Description:
+ * Description: Токен доступа
  * Creation date: 11.07.2016 8:30
  *
  * @author sks

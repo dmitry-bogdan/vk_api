@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
- * Description:
+ * Description: Преобразует LocalDateTime в Timestamp для хранения в бд
  * Creation date: 11.07.2016 11:40
  *
  * @author sks

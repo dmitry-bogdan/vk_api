@@ -10,6 +10,8 @@ import com.example.service.exception.VkAccessException;
 import com.example.service.exception.VkDataException;
 import com.example.service.exception.VkHttpResponseException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.slf4j.impl.Log4jLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Description:
+ * Description: Работа с базой
  * Creation date: 12.07.2016 8:35
  *
  * @author sks
@@ -29,22 +31,33 @@ import java.util.Map;
 @Service
 public class PersistenceService {
 
+    Logger LOG = Logger.getLogger(this.getClass());
+    
     private VkApiMethodInvoker apiMethodInvoker;
     private VkAccessTokenRepository accessTokenRepository;
     private VkGroupRepository groupRepository;
     private VkPostRepository postRepository;
 
+    /*
+     * Добавление AccessToken
+     * @param userCode код аутентификации юзера
+     * @param userSessionId ид сессии юзера
+     */
     public void addAccessToken(String userCode, String userSessionId)
             throws VkHttpResponseException, IOException, VkDataException {
-
         VkAccessToken token = apiMethodInvoker.getAccessToken(userCode);
         if (token != null) {
             token.setSessionId(userSessionId);
-            accessTokenRepository.save(token);
+            token = accessTokenRepository.save(token);
+            LOG.info(String.format("Access token inserted %s", token));
         } else
-            throw new VkDataException("Error. Empty token was received");
+            throw new VkDataException("Error. Empty token was received.");
     }
 
+    /*
+     * Добавление группы
+     * @param group группа
+     */
     public void addVkGroup(VkGroup group) throws VkHttpResponseException, IOException, VkDataException {
         String groupName = getGroupScreenName(group.getGroupURI());
         if (!StringUtils.isBlank(groupName)) {
@@ -59,7 +72,8 @@ public class PersistenceService {
                         addVkPost(postList.get(0));
                     }
                 }
-                System.out.println(groupRepository.save(newGroup));
+                newGroup = groupRepository.save(newGroup);
+                LOG.info(String.format("Group inserted %s", newGroup));
 
             } else
                 throw new VkDataException(String.format("Error. No matching group was found. URI=%s",
@@ -69,10 +83,19 @@ public class PersistenceService {
                     group.getGroupURI()));
     }
 
+    /*
+     * Добавление поста
+     * @param post пост
+     */
     public void addVkPost(VkPost post) {
-        postRepository.save(post);
+        post = postRepository.save(post);
+        LOG.info(String.format("Post inserted %s", post));
     }
 
+    /*
+     * Проверка наличия глвых постов в группе
+     * @param groupId ид группы
+     */
     public void addNewPosts(Integer groupId) throws IOException, VkHttpResponseException, VkDataException {
         VkGroup group = groupRepository.findOne(groupId);
         if (group.getGroupClosed() > 0) return;
@@ -98,9 +121,13 @@ public class PersistenceService {
         }
         if (!postList.isEmpty())
             postRepository.save(postList);
-        System.out.println(String.format("%d new posts was added to groupId=%d", postList.size(), groupId));
+        LOG.info(String.format("%d new posts was added to groupId=%d", postList.size(), groupId));
     }
 
+    /*
+     * Получение модели для отображения развернутого списка групп
+     * @param userSessionId ид сессии юзера
+     */
     public Map<String, Object> getGroupList(String userSessionId) throws VkAccessException, IOException, VkHttpResponseException {
         Map<String, Object> model = new HashMap<String, Object>();
         VkAccessToken accessToken = accessTokenRepository.findOneBySessionId(userSessionId);
@@ -130,6 +157,10 @@ public class PersistenceService {
         return model;
     }
 
+    /*
+     * Получение сокращенного имени группы
+     * @param uri
+     */
     private String getGroupScreenName(String uri) {
         String uriParts[] = uri.split("/");
         if (uriParts.length > 1) {

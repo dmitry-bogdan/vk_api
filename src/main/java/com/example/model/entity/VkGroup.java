@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 /**
- * Description:
+ * Description: Группа
  * Creation date: 11.07.2016 8:34
  *
  * @author sks

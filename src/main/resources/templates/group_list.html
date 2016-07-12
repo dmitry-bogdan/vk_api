@@ -6,25 +6,18 @@
     <title>Group list</title>
 </head>
 <body>
-<table>
+<div class="center">
+<h1>GROUPS</h1>
+<input type="submit" value="Add group" onclick="return location.href = 'group_input'" />
+<br/>
+<table class="group_list">
     <thead>
     <tr>
-        <td>
-            Group Name
-        </td>
-        <td>
-            Link
-        </td>
-        <td>
-            Closed Group
-        </td>
-        <td>
-            User signed in
-        </td>
-        <td>
-            New posts
-        </td>
-
+        <td>Name</td>
+        <td>Link</td>
+        <td>Closed</td>
+        <td>Member</td>
+        <td>New posts</td>
     </tr>
     </thead>
     <tbody>
@@ -35,15 +28,16 @@
         </td>
         <td th:text="*{group.groupClosed > 0}"/>
         <td th:text="${signedMap[group.groupId]}"/>
-        <td th:text="${newPostsList[group.groupId].size()}" />
         <td>
-            <ul th:if="${newPostsList[group.groupId] != null}">
-                <li th:each="post : ${newPostsList[group.groupId]}" th:text="*{post.postId}"></li>
+            <ul th:if="${newPostsList[group.groupId] != null}" class="posts">
+                <li th:each="post : ${newPostsList[group.groupId]}">
+                <a th:href="*{post.uri}" th:text="*{post.uri}" /></li>
             </ul>
         </td>
     </tr>
-    <tr th:if="${groupList.size() == 0}"><td>There is no data</td></tr>
+    <tr th:if="${groupList.size() == 0}"><td colspan="5">There is no data</td></tr>
     </tbody>
 </table>
+</div>
 </body>
 </html>

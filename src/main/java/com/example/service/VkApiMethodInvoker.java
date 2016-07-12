@@ -17,6 +17,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Description:
+ * Description: Вызовы Апи Vk
  * Creation date: 11.07.2016 9:37
  *
  * @author sks
@@ -35,6 +36,8 @@ import java.util.List;
 @Service
 public class VkApiMethodInvoker {
 
+    Logger LOG = Logger.getLogger(this.getClass());
+    
     @Value("${app.proxy.isEnabled}")
     private Boolean isProxyEnabled;
     @Value("${app.proxy.host}")
@@ -53,7 +56,7 @@ public class VkApiMethodInvoker {
     private URI_Builder uriBuilder;
 
     /*
-    Proxy config
+    Конфигурация прокси
      */
     @PostConstruct
     public void init() {
@@ -75,11 +78,13 @@ public class VkApiMethodInvoker {
             requestConfig = RequestConfig.custom()
                     .build();
         }
-        mapper
-                .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    /*
+     * Получить токена доступа
+     * @param code код аутентификации юзера
+     */
     public VkAccessToken getAccessToken(String code) throws VkHttpResponseException, IOException {
 
         HttpGet httpGet = new HttpGet(uriBuilder.getVkAccessTokenPage(code));
@@ -91,12 +96,15 @@ public class VkApiMethodInvoker {
         if (httpResponse.getStatusLine().getStatusCode() == 200) {
             token = mapper.readValue(httpResponse.getEntity().getContent(), VkAccessToken.class);
         } else {
-            System.err.println(httpResponse.getStatusLine().toString());
             throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
         }
         return token;
     }
 
+    /*
+     * Получить группу
+     * @param groupName короткое имя группы(из URI)
+     */
     public VkGroup getVkGroup(String groupName) throws VkHttpResponseException, IOException {
         HttpGet httpGet = new HttpGet(uriBuilder.getVkGroup(groupName));
         httpGet.setConfig(requestConfig);
@@ -110,12 +118,17 @@ public class VkApiMethodInvoker {
                 group = mapper.treeToValue(response.get(0), VkGroup.class);
             }
         } else {
-            System.err.println(httpResponse.getStatusLine().toString());
             throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
         }
         return group;
     }
 
+    /*
+     * Получить пост
+     * @param groupId ид группы
+     * @param count количество постов
+     * @param offset сдвиг
+     */
     public List<VkPost> getVkPost(Integer groupId, Integer count, Integer offset)
             throws IOException, VkHttpResponseException {
         HttpGet httpGet = new HttpGet(uriBuilder.getVkPost(groupId.toString(), count.toString(), offset.toString()));
@@ -135,12 +148,16 @@ public class VkApiMethodInvoker {
                 }
             }
         } else {
-            System.err.println(httpResponse.getStatusLine().toString());
             throw new VkHttpResponseException(httpResponse.getStatusLine().toString());
         }
         return postList;
     }
 
+    /*
+     * Является ли юзер членом группы
+     * @param groupId ид группы
+     * @param accessToken токен доступа юзера
+     */
     public Boolean getGroupIsMember(Integer groupId, String accessToken) throws IOException, VkHttpResponseException {
         HttpGet httpGet = new HttpGet(uriBuilder.getIsMemberURI(groupId.toString(), accessToken));
         httpGet.setConfig(requestConfig);
@@ -157,6 +174,7 @@ public class VkApiMethodInvoker {
         }
         return isMember;
     }
+    
     @Autowired
     public void setURI_Builder(URI_Builder uriBuilder) {
         this.uriBuilder = uriBuilder;

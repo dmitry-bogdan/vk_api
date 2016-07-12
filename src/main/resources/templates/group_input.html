@@ -6,19 +6,29 @@
     <title>Group input</title>
 </head>
 <body>
-    <div>
+<div class="center">
+<input type="submit" value="Group list" onclick="return location.href = 'group_list'" />
+<br/>
+    <br/>
+    <div class="error">
         <span th:if="${response} != null" th:text="'Response: '+${response}"/>
     </div>
-    <div th:if="${validation_errors} != null">
+    <div th:if="${validation_errors} != null" class="error">
         <ul>
             <li>Name must contain at least 2 characters</li>
             <li>URI mustn't be empty</li>
         </ul>
     </div>
     <form th:action="@{/group_input}" method="post">
-        <input type="text" name="groupName" placeholder="Group name"/>
-        <input type="text" name="groupURI" placeholder="Group URI"/>
-        <input type="submit" value="Add"/>
+    	<ul>
+        <li><input type="text" name="groupName" placeholder="Group name"/></li>
+        <li><input type="text" name="groupURI" placeholder="Group URI"/></li>
+        <li><input type="submit" value="Add"/></li>
+        </ul>
     </form>
+    
+    
+    
+    </div>
 </body>
 </html>

@@ -6,11 +6,14 @@
     <title>VK API</title>
 </head>
 <body>
-<div>
-    <span th:if="${response} != null" th:text="'Response: '+${response}" />
+<div class="center">
+	<h2>PRESS IT :)</h2>
+	<input type="submit" value="Press me" onclick="return location.href = 'login'"/>
+	<div class="error">
+	<br/>
+    <span th:if="${response} != null" th:text="${response}" />
+</div>
 </div>
 
-<h2>Press it</h2>
-<input type="submit" value="Yes, press me ^^," onclick="return location.href = 'login'"/>
 </body>
 </html>
