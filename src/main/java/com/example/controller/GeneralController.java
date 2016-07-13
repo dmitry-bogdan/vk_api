@@ -100,7 +100,7 @@ public class GeneralController {
     @RequestMapping(value = "/group_list", method = RequestMethod.GET)
     public ModelAndView getGroupList(HttpSession session){
         ModelAndView mav = new ModelAndView();
-        String viewName = "/group_list";
+        String viewName = "group_list";
         try {
             mav.addAllObjects(persistenceService.getGroupList(session.getId()));
         } catch (Exception exception) {
