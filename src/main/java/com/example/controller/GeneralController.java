@@ -54,7 +54,8 @@ public class GeneralController {
             persistenceService.addAccessToken(code, session.getId());
             mav.setViewName("redirect:/group_input");
         } catch (Exception exception) {
-            LOG.error(exception.getStackTrace().toString());
+            exception.printStackTrace();
+            LOG.error(exception.getMessage());
             mav.setViewName("redirect:/index?response=" + exception.getMessage());
         }
         return mav;
@@ -80,7 +81,8 @@ public class GeneralController {
             try {
                 persistenceService.addVkGroup(group);
             } catch (Exception exception) {
-                LOG.error(exception.getStackTrace().toString());
+                exception.printStackTrace();
+                LOG.error(exception.getMessage());
                 mav.setViewName("redirect:/group_input?response=" + exception.getMessage());
                 return mav;
             }
@@ -103,7 +105,8 @@ public class GeneralController {
             mav.addAllObjects(persistenceService.getGroupList(session.getId()));
         } catch (Exception exception) {
             viewName = String.format("redirect:/index?response=%s", exception.getMessage());
-            LOG.error(exception.getStackTrace().toString());
+            exception.printStackTrace();
+            LOG.error(exception.getMessage());
         }
         mav.setViewName(viewName);
         return mav;

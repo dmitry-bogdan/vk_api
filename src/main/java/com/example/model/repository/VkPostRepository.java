@@ -1,5 +1,6 @@
 package com.example.model.repository;
 
+import com.example.model.entity.VkGroup;
 import com.example.model.entity.VkPost;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,6 @@ import java.util.List;
  */
 @Repository
 public interface VkPostRepository extends JpaRepository<VkPost, Integer>{
-    VkPost findTopByGroupIdOrderByPostIdDesc(Integer groupId);
-    List<VkPost> findByGroupIdAndPostIdGreaterThan(Integer groupId, Integer postId);
+    VkPost findTopByGroupOrderByPostIdDesc(VkGroup group);
+    List<VkPost> findByGroupAndPostIdGreaterThan(VkGroup group, Integer postId);
 }

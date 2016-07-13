@@ -14,11 +14,23 @@ import javax.persistence.*;
 @Table(name = "vk_post")
 public class VkPost {
 
-    private Integer groupId;
+    private Integer id;
     private Integer postId;
+    private VkGroup group;
 
     @Id
-    @Column(name = "post_id", nullable = false, unique = true)
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    @Column(name = "id", nullable = false, unique = true)
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    @Basic
+    @Column(name = "post_id", nullable = false, unique = false)
     public Integer getPostId() {
         return postId;
     }
@@ -28,25 +40,22 @@ public class VkPost {
         this.postId = postId;
     }
 
-    @Basic
-    @Column(name = "group_id", nullable = false, unique = false)
-    public Integer getGroupId() {
-        return groupId;
+    @ManyToOne(targetEntity = VkGroup.class)
+    @JoinColumn(name = "group_id", updatable = true, insertable = true, referencedColumnName = "group_id")
+    public VkGroup getGroup() {
+        return group;
     }
 
-    @JsonProperty("owner_id")
-    public void setGroupId(Integer groupId) {
-        if (groupId < 0)
-            groupId *= -1;
-        this.groupId = groupId;
+    public void setGroup(VkGroup group) {
+        this.group = group;
     }
 
     @Transient
     public String getUri(){
-        return String.format("https://vk.com/wall-%d_%d", groupId, postId);
+        return String.format("https://vk.com/wall-%d_%d", group.getGroupId(), postId);
     }
     @Override
     public String toString() {
-        return String.format("VkPost(postId=%d groupId=%d)", postId, groupId);
+        return String.format("VkPost(postId=%d groupId=%d)", postId, group.getGroupId());
     }
 }

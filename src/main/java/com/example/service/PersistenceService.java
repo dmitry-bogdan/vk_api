@@ -11,8 +11,8 @@ import com.example.service.exception.VkDataException;
 import com.example.service.exception.VkHttpResponseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.slf4j.impl.Log4jLoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Description: Работа с базой
@@ -32,7 +34,7 @@ import java.util.Map;
 public class PersistenceService {
 
     Logger LOG = Logger.getLogger(this.getClass());
-    
+
     private VkApiMethodInvoker apiMethodInvoker;
     private VkAccessTokenRepository accessTokenRepository;
     private VkGroupRepository groupRepository;
@@ -65,14 +67,16 @@ public class PersistenceService {
             if (newGroup != null) {
                 newGroup.setGroupName(group.getGroupName());
                 newGroup.setGroupURI(group.getGroupURI());
-                if(newGroup.getGroupClosed() == 0){
+                if (newGroup.getGroupClosed() == 0) {
                     List<VkPost> postList = apiMethodInvoker.getVkPost(newGroup.getGroupId(), 5, 0);
                     if (postList != null && !postList.isEmpty()) {
                         newGroup.setLastPostId(postList.get(0).getPostId());
+                        postList.get(0).setGroup(newGroup);
+                        newGroup = groupRepository.save(newGroup);
                         addVkPost(postList.get(0));
                     }
-                }
-                newGroup = groupRepository.save(newGroup);
+                } else
+                    newGroup = groupRepository.save(newGroup);
                 LOG.info(String.format("Group inserted %s", newGroup));
 
             } else
@@ -98,8 +102,9 @@ public class PersistenceService {
      */
     public void addNewPosts(Integer groupId) throws IOException, VkHttpResponseException, VkDataException {
         VkGroup group = groupRepository.findOne(groupId);
-        if (group.getGroupClosed() > 0) return;
-        group.setLastPostId(postRepository.findTopByGroupIdOrderByPostIdDesc(groupId).getPostId());
+        if (group.getGroupClosed() > 0)
+            return;
+        group.setLastPostId(postRepository.findTopByGroupOrderByPostIdDesc(group).getPostId());
         group = groupRepository.save(group);
 
         List<VkPost> postList = new ArrayList<VkPost>();
@@ -108,9 +113,10 @@ public class PersistenceService {
         try {
             while (searching) {
                 for (VkPost post : apiMethodInvoker.getVkPost(groupId, 5, offset++ * 5)) {
-                    if (post.getPostId() > group.getLastPostId())
+                    if (post.getPostId() > group.getLastPostId()) {
+                        post.setGroup(group);
                         postList.add(post);
-                    else {
+                    } else {
                         searching = false;
                         break;
                     }
@@ -128,7 +134,8 @@ public class PersistenceService {
      * Получение модели для отображения развернутого списка групп
      * @param userSessionId ид сессии юзера
      */
-    public Map<String, Object> getGroupList(String userSessionId) throws VkAccessException, IOException, VkHttpResponseException {
+    public Map<String, Object> getGroupList(String userSessionId)
+            throws VkAccessException, IOException, VkHttpResponseException {
         Map<String, Object> model = new HashMap<String, Object>();
         VkAccessToken accessToken = accessTokenRepository.findOneBySessionId(userSessionId);
         if (accessToken == null)
@@ -145,9 +152,10 @@ public class PersistenceService {
             signedMap.put(group.getGroupId(),
                     apiMethodInvoker.getGroupIsMember(group.getGroupId(), accessToken.getAccessToken()));
         }
-        for (VkGroup group : groupList){
-            if (group.getGroupClosed() == 0){
-                List<VkPost> list = postRepository.findByGroupIdAndPostIdGreaterThan(group.getGroupId(), group.getLastPostId());
+        for (VkGroup group : groupList) {
+            if (group.getGroupClosed() == 0) {
+                List<VkPost> list = postRepository
+                        .findByGroupAndPostIdGreaterThan(group, group.getLastPostId());
                 newPostsList.put(group.getGroupId(), list);
             }
         }
@@ -162,11 +170,33 @@ public class PersistenceService {
      * @param uri
      */
     private String getGroupScreenName(String uri) {
-        String uriParts[] = uri.split("/");
-        if (uriParts.length > 1) {
-            return uriParts[uriParts.length - 1];
+        Pattern pattern = Pattern.compile("public([0-9]+$)|[a-zA-Z0-9_]+$");
+        Matcher matcher = pattern.matcher(uri.toLowerCase());
+        String name = null;
+        if (matcher.find()) {
+            name = matcher.group(0).startsWith("public") ? matcher.group(0).replace("public", "") : matcher.group(0);
+            LOG.info(String.format("Pattern matched for name %s", name));
         }
-        return null;
+
+        return name;
+    }
+
+    @Scheduled(fixedRate = 5*60*1000)
+    public void checkNewPosts() {
+        LOG.info("Scheduled checkNewPosts() method started.");
+        List<VkGroup> groupList = groupRepository.findAll();
+        for (VkGroup group : groupList) {
+            if (group.getGroupClosed() == 0)
+                try {
+                    addNewPosts(group.getGroupId());
+                } catch (Exception exception) {
+                    LOG.error(String.format("Error wile getting new posts VkGroup=%s Message=%s", group,
+                            exception.getMessage()));
+                    exception.printStackTrace();
+
+                }
+        }
+        LOG.info("Scheduled checkNewPosts() method completed.");
     }
 
     @Autowired
