@@ -1,1 +1,1 @@
-web: java $JAVA_OPTS -cp target/classes:target/dependency/* vk_api
+web: java -jar target/vk_api-1.jar
